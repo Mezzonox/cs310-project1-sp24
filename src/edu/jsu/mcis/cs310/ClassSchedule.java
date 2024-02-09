@@ -12,10 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-/*// IMPORTS FOR TESTING PURPOSES
-import java.io.FileWriter;
-import java.io.IOException;*/
-
 public class ClassSchedule {
     
     private final String CSV_FILENAME = "jsu_sp24_v1.csv";
@@ -35,21 +31,7 @@ public class ClassSchedule {
     private final String SCHEDULE_COL_HEADER = "schedule";
     private final String INSTRUCTOR_COL_HEADER = "instructor";
     private final String SUBJECTID_COL_HEADER = "subjectid";
-    
-    /*// METHOD FOR TESTING PURPOSES - TAKE OUT LATER
-    public void writeJsonToFile(String jsonOutput, String jsonData) {
-        
-        try (FileWriter fileWriter = new FileWriter(jsonOutput)) {
-            
-            fileWriter.write(jsonData);
-            System.out.println("JSON data written to " + jsonOutput);
-            
-        } catch (IOException e) {
-            
-            e.printStackTrace();
-        }
-    }*/
-    
+   
     public String convertCsvToJsonString(List<String[]> csv) {
         
         // Create outer JSON container
@@ -135,8 +117,68 @@ public class ClassSchedule {
     }
     
     public String convertJsonToCsvString(JsonObject json) {
+   
+        // Create the StringWriter & CSV Writer to write CSV data
+        StringWriter writer = new StringWriter();
+        CSVWriter csvWriter = new CSVWriter(writer, '\t', '"', '\\', "\n");
         
-        return "";
+        // Define CSV headers
+        String[] headers = {CRN_COL_HEADER, SUBJECT_COL_HEADER, NUM_COL_HEADER, DESCRIPTION_COL_HEADER, SECTION_COL_HEADER,
+            TYPE_COL_HEADER, CREDITS_COL_HEADER, START_COL_HEADER,
+            END_COL_HEADER, DAYS_COL_HEADER, WHERE_COL_HEADER, SCHEDULE_COL_HEADER, INSTRUCTOR_COL_HEADER};
+        
+        // Write headers to CSV
+        csvWriter.writeNext(headers);
+        
+        // Create JsonArray to hold "section" data
+        JsonArray sections = (JsonArray) json.get(SECTION_COL_HEADER);
+        
+        // Iterate through each section in the array
+        for (Object sectionObject : sections) {
+            
+            JsonObject sectionJson = (JsonObject) sectionObject;
+            List<String> row = new ArrayList<>();
+            
+            // Concatenate subject ID and Course Number
+            String courseNum = sectionJson.get(SUBJECTID_COL_HEADER) + " " + sectionJson.get(NUM_COL_HEADER);
+            
+            // Get the "course" details from the JSON Object; Get the nested JSON Object for the current course using the course ID
+            JsonObject courseObject = (JsonObject) json.get("course");
+            JsonObject courseDetails = (JsonObject) courseObject.get(courseNum);
+
+            // Get the "description" and "credits" fields from the course details
+            String description = (String) courseDetails.get("description");
+            String credits = String.valueOf(courseDetails.get("credits"));
+            
+            // Get the "scheduletype" JSON object from the main JSON object; Get the schedule type description
+            JsonObject scheduleTypeObject = (JsonObject) json.get("scheduletype");
+            String type = (String) sectionJson.get(TYPE_COL_HEADER);
+            String schedule = (String) scheduleTypeObject.get(type);
+            
+            // Add data to row
+            row.add(String.valueOf(sectionJson.get(CRN_COL_HEADER)));
+            row.add((String) ((JsonObject) json.get("subject")).get(sectionJson.get(SUBJECTID_COL_HEADER).toString()));
+            row.add(courseNum);
+            row.add(description);
+            row.add(String.valueOf(sectionJson.get(SECTION_COL_HEADER)));
+            row.add(String.valueOf(sectionJson.get(TYPE_COL_HEADER)));
+            row.add(credits);
+            row.add(String.valueOf(sectionJson.get(START_COL_HEADER)));
+            row.add(String.valueOf(sectionJson.get(END_COL_HEADER)));
+            row.add(String.valueOf(sectionJson.get(DAYS_COL_HEADER)));
+            row.add(String.valueOf(sectionJson.get(WHERE_COL_HEADER)));
+            row.add(schedule);
+          
+            // Convert instructors list to a comma-separated string; Add instructors to row
+            List<String> instructors = (List<String>) sectionJson.get(INSTRUCTOR_COL_HEADER);
+            String instructorString = String.join(", ", instructors);
+            row.add(instructorString);
+            
+            // Write row to CSV
+            csvWriter.writeNext(row.toArray(new String[0]));
+        }
+        
+        return writer.toString();  
     }
     
     public JsonObject getJson() {
