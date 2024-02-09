@@ -31,6 +31,8 @@ public class ClassSchedule {
     private final String SCHEDULE_COL_HEADER = "schedule";
     private final String INSTRUCTOR_COL_HEADER = "instructor";
     private final String SUBJECTID_COL_HEADER = "subjectid";
+    private final String COURSE = "course";
+    private final String SCHEDULE_TYPE = "scheduletype";
    
     public String convertCsvToJsonString(List<String[]> csv) {
         
@@ -123,9 +125,9 @@ public class ClassSchedule {
         CSVWriter csvWriter = new CSVWriter(writer, '\t', '"', '\\', "\n");
         
         // Define CSV headers
-        String[] headers = {CRN_COL_HEADER, SUBJECT_COL_HEADER, NUM_COL_HEADER, DESCRIPTION_COL_HEADER, SECTION_COL_HEADER,
-            TYPE_COL_HEADER, CREDITS_COL_HEADER, START_COL_HEADER,
-            END_COL_HEADER, DAYS_COL_HEADER, WHERE_COL_HEADER, SCHEDULE_COL_HEADER, INSTRUCTOR_COL_HEADER};
+        String[] headers = {CRN_COL_HEADER, SUBJECT_COL_HEADER, NUM_COL_HEADER, DESCRIPTION_COL_HEADER, 
+            SECTION_COL_HEADER, TYPE_COL_HEADER, CREDITS_COL_HEADER, START_COL_HEADER, END_COL_HEADER, 
+            DAYS_COL_HEADER, WHERE_COL_HEADER, SCHEDULE_COL_HEADER, INSTRUCTOR_COL_HEADER};
         
         // Write headers to CSV
         csvWriter.writeNext(headers);
@@ -143,21 +145,21 @@ public class ClassSchedule {
             String courseNum = sectionJson.get(SUBJECTID_COL_HEADER) + " " + sectionJson.get(NUM_COL_HEADER);
             
             // Get the "course" details from the JSON Object; Get the nested JSON Object for the current course using the course ID
-            JsonObject courseObject = (JsonObject) json.get("course");
+            JsonObject courseObject = (JsonObject) json.get(COURSE);
             JsonObject courseDetails = (JsonObject) courseObject.get(courseNum);
 
             // Get the "description" and "credits" fields from the course details
-            String description = (String) courseDetails.get("description");
-            String credits = String.valueOf(courseDetails.get("credits"));
+            String description = (String) courseDetails.get(DESCRIPTION_COL_HEADER);
+            String credits = String.valueOf(courseDetails.get(CREDITS_COL_HEADER));
             
             // Get the "scheduletype" JSON object from the main JSON object; Get the schedule type description
-            JsonObject scheduleTypeObject = (JsonObject) json.get("scheduletype");
+            JsonObject scheduleTypeObject = (JsonObject) json.get(SCHEDULE_TYPE);
             String type = (String) sectionJson.get(TYPE_COL_HEADER);
             String schedule = (String) scheduleTypeObject.get(type);
             
             // Add data to row
             row.add(String.valueOf(sectionJson.get(CRN_COL_HEADER)));
-            row.add((String) ((JsonObject) json.get("subject")).get(sectionJson.get(SUBJECTID_COL_HEADER).toString()));
+            row.add((String) ((JsonObject) json.get(SUBJECT_COL_HEADER)).get(sectionJson.get(SUBJECTID_COL_HEADER).toString()));
             row.add(courseNum);
             row.add(description);
             row.add(String.valueOf(sectionJson.get(SECTION_COL_HEADER)));
